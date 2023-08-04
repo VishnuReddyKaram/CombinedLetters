@@ -15,6 +15,7 @@ namespace CombinedLetters
             List<string> combinedUniversityIds = new List<string>();
             ProcessLetters(inputFolder, outputFolder, combinedUniversityIds);
 
+            GenerateReport(outputFolder, combinedUniversityIds);
             // Feature 1: Archive files from Input folder to Archive folder
             ArchiveFiles(inputFolder, archiveFolder);
 
@@ -79,13 +80,8 @@ namespace CombinedLetters
                 // Iterate over the admission files and combine them with the scholarship files.
                 foreach (string admissionFile in admissionFiles)
                 {
-                    // Getting the university ID from the admission file.
                     string universityId = Path.GetFileNameWithoutExtension(admissionFile).Substring("admission-".Length);
-
-                    // Finding the scholarship file for the university ID.
                     string scholarshipFile = scholarshipFiles.FirstOrDefault(file => file.Contains(universityId));
-
-                    // If the scholarship file is found, combine the two letters and add the university ID to the list of combined university IDs.
                     if (scholarshipFile != null)
                     {
                         // Combine the letters using the LetterService.
@@ -101,7 +97,6 @@ namespace CombinedLetters
                     }
                     else
                     {
-                        // If the scholarship file is not found, logging a message.
                         Console.WriteLine($"No matching Scholarship and Admission is found for University ID: {universityId}");
                     }
                 }
@@ -109,7 +104,24 @@ namespace CombinedLetters
 
             Console.WriteLine($"Processing to output folder completed.");
         }
+       // to generate the report of combined letters.
+    private static void GenerateReport(string outputFolder, List<string> combinedUniversityIds)
+        {
+            string reportFileName = "Report.txt";
+            string reportFilePath = Path.Combine(outputFolder, reportFileName);
 
+            using (StreamWriter writer = new StreamWriter(reportFilePath))
+            {
+                writer.WriteLine($"{DateTime.Now:d} Report");
+                writer.WriteLine("--------------------------------------");
+                writer.WriteLine($"Number of Combined Letters : {combinedUniversityIds.Count}");
+                foreach (string universityId in combinedUniversityIds)
+                {
+                    writer.WriteLine(universityId);
+                }
+            }
 
+            Console.WriteLine("Report generated successfully.");
+        }
     }
 }
