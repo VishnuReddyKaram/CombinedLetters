@@ -10,11 +10,15 @@ namespace CombinedLetters
         {
             string inputFolder = "Input";
             string archiveFolder = "Archive";
+            string outputFolder = "Output";
+
+            List<string> combinedUniversityIds = new List<string>();
+            ProcessLetters(inputFolder, outputFolder, combinedUniversityIds);
 
             // Feature 1: Archive files from Input folder to Archive folder
             ArchiveFiles(inputFolder, archiveFolder);
 
-            Console.WriteLine("All tasks completed.");
+            Console.WriteLine("task completed.");
         }
 
         static void ArchiveFiles(string sourceFolder, string destinationFolder)
@@ -46,6 +50,66 @@ namespace CombinedLetters
 
             Console.WriteLine("All files have been archived.");
         }
+        // processesing all the matching letters in whic has same University ID in the input folder and combines the admission and scholarship letters.
+        public static void ProcessLetters(string inputFolder, string outputFolder, List<string> combinedUniversityIds)
+        {
+            // Processing in the "Admission" department.
+            ProcessLettersForDepartment(inputFolder, outputFolder, "Admission", combinedUniversityIds);
+
+            // Processing in the "Scholarship" department.
+            ProcessLettersForDepartment(inputFolder, outputFolder, "Scholarship", combinedUniversityIds);
+        }
+
+        // to processes all the letters in the input folder for a given department and combines the admission and scholarship letters for each university ID and move to Output.
+        public static void ProcessLettersForDepartment(string inputFolder, string outputFolder, string department, List<string> combinedUniversityIds)
+        {
+            // Getting the directory of department.
+            string departmentFolder = Path.Combine(inputFolder, department);
+
+            // Geting all the dated folders.
+            string[] datedFolders = Directory.GetDirectories(departmentFolder);
+
+            // Iterating over the dated folders and process the admission and scholarship letters for each folder.
+            foreach (string datedFolder in datedFolders)
+            {
+                // Get the admission and scholarship files for the dated folder.
+                string[] admissionFiles = Directory.GetFiles(datedFolder, "admission-*.txt");
+                string[] scholarshipFiles = Directory.GetFiles(Path.Combine(inputFolder, "Scholarship", Path.GetFileName(datedFolder)), "scholarship-*.txt");
+                
+                // Iterate over the admission files and combine them with the scholarship files.
+                foreach (string admissionFile in admissionFiles)
+                {
+                    // Getting the university ID from the admission file.
+                    string universityId = Path.GetFileNameWithoutExtension(admissionFile).Substring("admission-".Length);
+
+                    // Finding the scholarship file for the university ID.
+                    string scholarshipFile = scholarshipFiles.FirstOrDefault(file => file.Contains(universityId));
+
+                    // If the scholarship file is found, combine the two letters and add the university ID to the list of combined university IDs.
+                    if (scholarshipFile != null)
+                    {
+                        // Combine the letters using the LetterService.
+                        string resultFileName = $"combined_{universityId}.txt";
+                        string resultFilePath = Path.Combine(outputFolder, resultFileName);
+
+                        // Using the LetterService to combine the admission and scholarship letters.
+                        LetterService letterService = new LetterService();
+                        letterService.CombineTwoLetters(admissionFile, scholarshipFile, resultFilePath);
+
+                        // Adding the combined university ID to the list.
+                        combinedUniversityIds.Add(universityId);
+                    }
+                    else
+                    {
+                        // If the scholarship file is not found, logging a message.
+                        Console.WriteLine($"No matching Scholarship and Admission is found for University ID: {universityId}");
+                    }
+                }
+            }
+
+            Console.WriteLine($"Processing to output folder completed.");
+        }
+
 
     }
 }
